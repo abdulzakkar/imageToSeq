@@ -3,7 +3,9 @@ import math
 import random
 import argparse
 import sys
+#ALL above the above modules MUST be available for proper functionality.
 
+#Define all argparse arguemnts
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i","--infile", help = "input file.")
@@ -20,6 +22,7 @@ parser.add_argument("-t","--fontsize", help = "size of letter within each 'pixel
 parser.add_argument("-e","--brightness", help = "the value to which the pixels are normalized to.", default = 200, nargs='?', type = int)
 args = vars(parser.parse_args())
 
+#Can be used to make the values of a list range from 0 to 1, maintaining proportions.
 def normalize(s):
     n = min(s)
     x = max(s)
@@ -28,6 +31,8 @@ def normalize(s):
         output.append((s[i] - n) / (x - n)) #formula
     return output
 
+#Generates input image with the proper size where one pixel = 1 character in the following steps.
+#Returns a list of all the pixels' RGB values for the resized image.
 def AdjustInputImagePixelsSize(filename,M):
     imageIn = Image.open(filename)
     width,height = imageIn.size
@@ -37,6 +42,10 @@ def AdjustInputImagePixelsSize(filename,M):
     width,height = imageIn.size
     return imageIn,allPixels,width,height
 
+#Incorporates the image that is used for the colors of the characters (the background).
+#Normalizes the brightness values of all the background pixels to a desired degree, in order for the
+    #character grid to show through more clearly.
+#Returns a list of all the pixels' NEW RGB values for the background image.
 def AdjustBgImagePixelsSize(filename,width,height,N,blackOnWhite,n,brightness):
     imageBg = Image.open(filename)
     imageBg = imageBg.resize((width*N,height*N), Image.ANTIALIAS)
@@ -65,6 +74,9 @@ def AdjustBgImagePixelsSize(filename,width,height,N,blackOnWhite,n,brightness):
     bgData = list(imageBg.getdata())
     return bgData, bgPixels
 
+#Generates and stores individual images of each character, and calculates the character's average brightness.
+    #A fuller character like M or N would have a higher brightness than a -.
+#Character brighnesses are normalized from 0 to 1.
 def generateElementValuesPics(elementSets,elements,blackOnWhite,font,fontsize,N):
     elementValues = []
     elementPics = []
@@ -91,6 +103,8 @@ def generateElementValuesPics(elementSets,elements,blackOnWhite,font,fontsize,N)
     elementValues = normalize(elementValues)
     return elementValues, elementPics
 
+#Generates the final output image by assigning a character image from the previous function to each pixels from the
+    #input image. The background will show through where the characters are visible (where the RGB values are high in the character image).
 def generateAndSaveOutputFile(width,height,N,allPixels,elementValues,blackOnWhite,elementPics,bgData,outputFile,r):
     imageOut = Image.new("RGB", (width*N,height*N), "black")
     pixels = imageOut.load()
@@ -123,6 +137,7 @@ def generateAndSaveOutputFile(width,height,N,allPixels,elementValues,blackOnWhit
     imageOut.save(outputFile)
 
 def main():
+    #Options for which characters are available to the user.
     elementSets = [
     [chr(x) for x in range(33,127)],
     ['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'],
@@ -149,6 +164,7 @@ def main():
     fontsize = args["fontsize"] #size of letter within each 'pixel.'
     brightness = args["brightness"] #the value to which the pixels are normalized to.
 
+    #Run all above functions.
     sys.stdout.write("\nAdjusting input image.\n\n")
     imageIn,allPixels,width,height = AdjustInputImagePixelsSize(inputFile,M)
     sys.stdout.write("Adjusting background image:\n")
@@ -159,6 +175,5 @@ def main():
     sys.stdout.write("Rendering final image:\n")
     generateAndSaveOutputFile(width,height,N,allPixels,elementValues,blackOnWhite,elementPics,bgData,outputFile,r)
     sys.stdout.write("\nDone! Image is ready :)")
-
 
 main()
